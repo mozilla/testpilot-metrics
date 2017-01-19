@@ -1,0 +1,18 @@
+{
+  "name": "Test Pilot Metrics WebExtension Example",
+  "description": "A tiny example WebExtension that uses testpilot-metrics to ping GA each time a toolbar button is clicked.",
+  "version": "0.0.1",
+  "background": {
+    "scripts": ["testpilot-metrics.js", "background.js"]
+  },
+  "browser_action": {},
+  "permissions": [
+    "https://ssl.google-analytics.com/collect"
+  ],
+  "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "webextension-example@testpilot-metrics"
+    }
+  }
+}
