@@ -2,7 +2,7 @@
   "name": "testpilot-metrics",
   "version": "1.0.0",
   "description": "Metrics library for Test Pilot experiments. Sends events to Google Analytics always, and Test Pilot metrics pipeline while the experiment is an active Test Pilot experiment.",
-  "main": "index.js",
+  "main": "testpilot-metrics.js",
   "scripts": {
     "test": "mocha test/*",
     "build-docs": "documentation build testpilot-metrics.js -f md -o API.md"
