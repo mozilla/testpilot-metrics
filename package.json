@@ -5,6 +5,7 @@
   "main": "testpilot-metrics.js",
   "scripts": {
     "test": "mocha test/*",
+    "lint": "eslint .",
     "build-docs": "documentation build testpilot-metrics.js -f md -o API.md"
   },
   "repository": {

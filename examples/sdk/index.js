@@ -10,6 +10,7 @@ const { sendEvent } = new Metrics({
   type: 'sdk'
 });
 
+// eslint-disable-next-line no-unused-vars
 const btn = ui.ActionButton({
   id: 'metrics-test-button',
   label: 'Metrics Test Button',

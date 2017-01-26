@@ -2,7 +2,7 @@ const sinon = require('sinon');
 const mockRequire = require('mock-require');
 const chai = require('chai');
 chai.use(require('chai-as-promised'));
-const { expect, should, assert } = chai;
+const { expect } = chai;
 
 const Metrics = require('../testpilot-metrics');
 
@@ -28,46 +28,46 @@ function beforeSDK(g) {
   // then uses the Services global to get sendBeacon from
   // Services.appShell.hiddenDOMWindow.navigator.
   mockRequire('chrome', { Cu: { import: () => {} }});
-  global.Services = {appShell: {hiddenDOMWindow: {navigator: {sendBeacon: () => {}}}}};
+  g.Services = {appShell: {hiddenDOMWindow: {navigator: {sendBeacon: () => {}}}}};
 }
 
 function afterSDK(g) {
   mockRequire.stop('chrome');
-  delete global.Services;
+  delete g.Services;
 }
 
 function beforeBootstrapped(g) {
   // The bootstrapped type uses Components.utils.import to load Services.jsm,
   // then uses the Services global to get sendBeacon from
   //   Services.appShell.hiddenDOMWindow.navigator.
-  global.Components = {utils: {import: () => {}}};
-  global.Services = {appShell: {hiddenDOMWindow: {navigator: {sendBeacon: () => {}}}}};
+  g.Components = {utils: {import: () => {}}};
+  g.Services = {appShell: {hiddenDOMWindow: {navigator: {sendBeacon: () => {}}}}};
 }
 
 function afterBootstrapped(g) {
-  delete global.Components;
-  delete global.Services;
+  delete g.Components;
+  delete g.Services;
 }
 
 // TODO: do we really want all this polluted, shared global space?
 describe('Metrics constructor', () => {
   describe('required "id" (addon ID) argument', () => {
     it('should throw if the id is missing', () => {
-      const missingId = () => { const m = new Metrics({ uid: 123 }) };
+      const missingId = () => { new Metrics({ uid: 123 }) };
       expect(missingId).to.throw(Error);
     });
     it('should throw if "id" is null', () => {
-      const nullId = () => { const m = new Metrics({ id: null, uid: 123 }) };
+      const nullId = () => { new Metrics({ id: null, uid: 123 }) };
       expect(nullId).to.throw(Error);
     });
   });
   describe('required "uid" (non-PII user ID) argument', () => {
     it('should throw if the uid is missing', () => {
-      const missingCid = () => { const m = new Metrics({ id: '@my-addon' }) };
+      const missingCid = () => { new Metrics({ id: '@my-addon' }) };
       expect(missingCid).to.throw(Error);
     });
     it('should throw if uid is null', () => {
-      const nullCid = () => { const m = new Metrics({ id: '@my-addon', uid: null }) };
+      const nullCid = () => { new Metrics({ id: '@my-addon', uid: null }) };
       expect(nullCid).to.throw(Error);
     });
   });
@@ -84,6 +84,7 @@ describe('Metrics constructor', () => {
       beforeWebExt(global);
 
       const m = new Metrics({ id: '@my-addon', version: '1.0.2', uid: 123, type: 'webextension' });
+      expect(m.type).to.equal('webextension');
 
       afterWebExt(global);
     });
@@ -91,6 +92,7 @@ describe('Metrics constructor', () => {
       beforeSDK(global);
 
       const m = new Metrics({ id: '@my-addon', version: '1.0.2', uid: 123, type: 'sdk' });
+      expect(m.type).to.equal('sdk');
 
       afterSDK(global);
     });
@@ -98,12 +100,13 @@ describe('Metrics constructor', () => {
       beforeBootstrapped(global);
 
       const m = new Metrics({ id: '@my-addon', version: '1.0.2', uid: 123, type: 'bootstrapped' });
+      expect(m.type).to.equal('bootstrapped');
 
       afterBootstrapped(global);
     });
     it('should reject any other value', () => {
       expect(() => {
-        const m = new Metrics({ id: '@my-addon', version: '1.0.2', uid: 123, type: 'foo' });
+        new Metrics({ id: '@my-addon', version: '1.0.2', uid: 123, type: 'foo' });
       }).to.throw(Error);
     });
   });
@@ -169,7 +172,7 @@ describe('sendEvent', () => {
   it('should call _gaTransform if this.tid is set', () => {
       beforeWebExt(global);
       const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345', tid: 'UA-49796218-47'});
-      const clientStub = sinon.stub(m, '_sendToClient');
+      const clientStub = sinon.stub(m, '_sendToClient'); // eslint-disable-line no-unused-vars
       const gaStub = sinon.stub(m, '_gaTransform');
 
       m.sendEvent({method: 'click', object: 'button'});
@@ -180,7 +183,7 @@ describe('sendEvent', () => {
   it('should call _gaSend if this.tid is set', () => {
       beforeWebExt(global);
       const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345', tid: 'UA-49796218-47'});
-      const clientStub = sinon.stub(m, '_sendToClient');
+      const clientStub = sinon.stub(m, '_sendToClient'); // eslint-disable-line no-unused-vars
       const gaStub = sinon.stub(m, '_gaSend');
 
       m.sendEvent({method: 'click', object: 'button'});
@@ -191,7 +194,7 @@ describe('sendEvent', () => {
   it('should not call _gaTransform if this.tid is not set', () => {
       beforeWebExt(global);
       const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345'});
-      const clientStub = sinon.stub(m, '_sendToClient');
+      const clientStub = sinon.stub(m, '_sendToClient'); // eslint-disable-line no-unused-vars
       const gaStub = sinon.stub(m, '_gaTransform');
 
       m.sendEvent({method: 'click', object: 'button'});
@@ -202,7 +205,7 @@ describe('sendEvent', () => {
   it('should not call _gaSend if this.tid is not set', () => {
       beforeWebExt(global);
       const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345'});
-      const clientStub = sinon.stub(m, '_sendToClient');
+      const clientStub = sinon.stub(m, '_sendToClient'); // eslint-disable-line no-unused-vars
       const gaStub = sinon.stub(m, '_gaSend');
 
       m.sendEvent({method: 'click', object: 'button'});

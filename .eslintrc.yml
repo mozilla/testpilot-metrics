@@ -1,0 +1,21 @@
+env:
+  browser: true
+  es6: true
+  mocha: true
+  node: true
+  webextensions: true
+
+extends:
+  - eslint:recommended
+
+globals:
+  BroadcastChannel: false
+  Components: false
+  Services: false
+
+rules:
+  eqeqeq: error
+  no-console: warn
+  no-var: error
+  prefer-const: error
+  quotes: [error, single, {allowTemplateLiterals: true, avoidEscape: true}]
