@@ -183,7 +183,7 @@ Metrics.prototype = {
    * @param {string} variant - see `sendEvent` docs. Note that `variant` is
    * required here, assuming the default value was filled in by `sendEvent()`.
    */
-  _gaTransform: function(method, object, category, variant) {
+  _gaTransform: function({method, object, category, variant}) {
     const data = {
       v: 1,
       an: this.id,
