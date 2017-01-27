@@ -161,7 +161,7 @@ describe('sendEvent', () => {
       const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345'});
       const stub = sinon.stub(m, '_sendToClient');
 
-      m.sendEvent({event: 'click', object: 'button'});
+      m.sendEvent({method: 'click', object: 'button'});
       expect(stub.calledOnce).to.be.true;
 
       afterWebExt(global);
@@ -172,7 +172,7 @@ describe('sendEvent', () => {
       const clientStub = sinon.stub(m, '_sendToClient');
       const gaStub = sinon.stub(m, '_gaTransform');
 
-      m.sendEvent({event: 'click', object: 'button'});
+      m.sendEvent({method: 'click', object: 'button'});
       expect(gaStub.calledOnce).to.be.true;
 
       afterWebExt(global);
@@ -183,7 +183,7 @@ describe('sendEvent', () => {
       const clientStub = sinon.stub(m, '_sendToClient');
       const gaStub = sinon.stub(m, '_gaSend');
 
-      m.sendEvent({event: 'click', object: 'button'});
+      m.sendEvent({method: 'click', object: 'button'});
       expect(gaStub.calledOnce).to.be.true;
 
       afterWebExt(global);
@@ -194,7 +194,7 @@ describe('sendEvent', () => {
       const clientStub = sinon.stub(m, '_sendToClient');
       const gaStub = sinon.stub(m, '_gaTransform');
 
-      m.sendEvent({event: 'click', object: 'button'});
+      m.sendEvent({method: 'click', object: 'button'});
       expect(gaStub.calledOnce).to.be.false;
 
       afterWebExt(global);
@@ -205,7 +205,7 @@ describe('sendEvent', () => {
       const clientStub = sinon.stub(m, '_sendToClient');
       const gaStub = sinon.stub(m, '_gaSend');
 
-      m.sendEvent({event: 'click', object: 'button'});
+      m.sendEvent({method: 'click', object: 'button'});
       expect(gaStub.calledOnce).to.be.false;
 
       afterWebExt(global);
@@ -218,7 +218,7 @@ describe('_sendToClient', () => {
       const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345'});
       const postMessageStub = sinon.stub(m._channel, 'postMessage');
 
-      m.sendEvent({event: 'click', object: 'button'});
+      m.sendEvent({method: 'click', object: 'button'});
       expect(postMessageStub.calledOnce).to.be.true;
 
       afterWebExt(global);
@@ -228,15 +228,15 @@ describe('_sendToClient', () => {
       const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345'});
       const postMessageStub = sinon.stub(m._channel, 'postMessage');
 
-      m.sendEvent({event: 'click', object: 'button'});
-      expect(postMessageStub.withArgs({id: '@my-addon', event: 'click', object: 'button'}));
+      m.sendEvent({method: 'click', object: 'button'});
+      expect(postMessageStub.withArgs({id: '@my-addon', method: 'click', object: 'button'}));
     });
     it('should not serialize the packet before sending', () => {
       beforeWebExt(global);
       const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345'});
       const postMessageStub = sinon.stub(m._channel, 'postMessage');
 
-      m.sendEvent({event: 'click', object: 'button'});
+      m.sendEvent({method: 'click', object: 'button'});
       expect(typeof postMessageStub.getCall(0).args[0] !== 'string');
     });
   });
@@ -247,7 +247,7 @@ describe('_sendToClient', () => {
       global.Services.obs = { notifyObservers: notifyStub };
       const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345', type: 'sdk'});
 
-      m.sendEvent({event: 'click', object: 'button'});
+      m.sendEvent({method: 'click', object: 'button'});
       expect(notifyStub.calledOnce).to.be.true;
 
       afterSDK(global);
@@ -261,7 +261,7 @@ describe('_sendToClient', () => {
       global.Services.obs = { notifyObservers: notifyStub };
       const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345', type: 'bootstrapped'});
 
-      m.sendEvent({event: 'click', object: 'button'});
+      m.sendEvent({method: 'click', object: 'button'});
       expect(notifyStub.calledOnce).to.be.true;
 
       afterBootstrapped(global);

@@ -52,11 +52,11 @@ const { sendEvent } = new Metrics({
 
 sendEvent({
   object: 'webext-button',
-  event: 'click'
+  method: 'click'
 });
 ```
 
-### Sending extra fields in addition to event / object / category
+### Sending extra fields in addition to method / object / category
 
 If you need to send fields in addition to the defaults, you'll need to follow
 different steps for GA and for Mozilla's data pipeline.
@@ -74,11 +74,11 @@ top-level keys in the `sendEvent` parameter object, for example:
 ```js
 
 // Track the `clientX` and `clientY` values of an experiment popup window,
-// and send along with the event, object, and category:
+// and send along with the method, object, and category:
 
 sendEvent({
   object: 'special-button',
-  event: 'click',
+  method: 'click',
   clientX: 185,
   clientY: 560
 });
@@ -92,8 +92,8 @@ Google Analytics doesn't support arbitrary named parameters. To send extra
 fields to GA, you must decide how to map your extra fields to the GA [custom
 fields](https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#customs).
 
-Once you've figured out this mapping, pass in a `transform` function that
-will convert the extra fields to GA custom fields.
+Once you've figured out this mapping, pass a second argument to `sendEvent`:
+a `transform` function that will convert the extra fields to GA custom fields.
 
 The `transform` function is passed 2 arguments: first, the raw event object
 that was passed to `sendEvent`; second, the default GA ping that would normally
@@ -110,21 +110,21 @@ alone. You'd do this:
 
 sendEvent({
   object: 'special-button',
-  event: 'click',
+  method: 'click',
   clientX: 185,
-  clientY: 560,
-  transform: (input, output) => {
-    // Add two extra fields from the input object to the output object.
-    output.cd2 = input.clientX;
-    output.cd3 = input.clientY;
-    // Return the transformed output object, to be encoded and sent to GA.
-    return output;
-  }
+  clientY: 560
+},
+transform: (input, output) => {
+  // Add two extra fields from the input object to the output object.
+  output.cd2 = input.clientX;
+  output.cd3 = input.clientY;
+  // Return the transformed output object, to be encoded and sent to GA.
+  return output;
 });
 ```
 
 Google Analytics defines [8 different hit types](https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#t),
-but this library only uses the `event` type by default. Transform functions
+but this library only uses the `Event` hit type by default. Transform functions
 allow experiment authors to submit other hit types. For example, uncaught
 Errors could be sent using the GA `exception` type:
 
@@ -135,16 +135,16 @@ try {
 } catch (err) {
   console.error(`somethingImportant failed: ${ex}`);
   sendEvent({
-    // This (event, object) pair will be sent to Mozilla's internal metrics.
-    event: 'uncaught-exception',
-    object: 'somethingImportant',
-    transform: (input, output) => {
-      // Change the event type.
-      output.t = 'exception';
-      // Add the exception description field, mandatory for 'exception' hits.
-      output.exd = `somethingImportant: ${err}`
-      return output;
-    }
+    // This (method, object) pair will be sent to Mozilla's internal metrics.
+    method: 'uncaught-exception',
+    object: 'somethingImportant'
+  },
+  transform: (input, output) => {
+    // Change the GA hit type.
+    output.t = 'exception';
+    // Add the exception description field, mandatory for 'exception' hits.
+    output.exd = `somethingImportant: ${err}`
+    return output;
   });
 }
 ```
@@ -200,7 +200,7 @@ const { sendEvent } = new Metrics({
 ```
 
 5) Each time an interesting event occurs, call `sendEvent`, passing in event
-details in event/object/category format. If you are running any multivariate
+details in method/object/category format. If you are running any multivariate
 or A/B tests, you can include that info as well:
 
 ```js
@@ -208,7 +208,7 @@ or A/B tests, you can include that info as well:
 browser.browserAction.onClicked.addListener((evt) => {
   sendEvent({
     object: 'webext-button',
-    event: 'click',
+    method: 'click',
 
     // these fields are optional:
     category: 'toolbar',
@@ -244,7 +244,7 @@ const { sendEvent } = new Metrics({
 ```
 
 4) Each time an interesting event occurs, call `sendEvent`, passing in event
-details in event/object/category format. If you are running any multivariate
+details in method/object/category format. If you are running any multivariate
 or A/B tests, you can include that info as well:
 
 ```js
@@ -259,7 +259,7 @@ const btn = ui.ActionButton({
   onClick: () => {
     sendEvent({
       object: 'sdk-button',
-      event: 'click',
+      method: 'click',
 
       // these fields are optional:
       category: 'interactions',
@@ -271,7 +271,7 @@ const btn = ui.ActionButton({
 
 ### Google Analytics output
 
-For simplicity, the only GA ping type currently supported is the `event` type.
+For simplicity, the only GA hit type currently supported is the `Event` hit type.
 
 As an example, the following ping:
 
@@ -285,7 +285,7 @@ const { sendEvent } = new Metrics({
 });
 
 sendEvent({
-  event: 'click',
+  method: 'click',
   object: 'home-button-1',
   category: 'toolbar-menu',
   study: 'button-color-test',
@@ -293,7 +293,7 @@ sendEvent({
 });
 ```
 
-is transformed into a GA Measurement Protocol 'event' ping with parameters:
+is transformed into a GA Measurement Protocol hit with parameters:
 
 ```js
 msg = {

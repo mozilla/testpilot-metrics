@@ -10,6 +10,6 @@ browser.browserAction.onClicked.addListener((evt) => {
   console.log('Button clicked! Sending metrics event...');
   sendEvent({
     object: 'webext-button',
-    event: 'click'
+    method: 'click'
   });
 });

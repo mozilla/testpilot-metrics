@@ -18,5 +18,5 @@ const btn = ui.ActionButton({
     '32': './icon-32.png',
     '64': './icon-64.png'
   },
-  onClick: () => sendEvent({object: 'sdk-button', event: 'click'})
+  onClick: () => sendEvent({object: 'sdk-button', method: 'click'})
 });
