@@ -35,24 +35,32 @@ needed when the experiment is added to or removed from Test Pilot.
 
 Sends an event to the Mozilla data pipeline (and Google Analytics, if
 a `tid` was passed to the constructor). Note: to avoid breaking callers,
-if the required arguments are missing, an Error will not be thrown.
-Instead, the message will be silently dropped. Enable debug mode to
-see error messages.
+if sending the event fails, no Errors will be thrown. Instead, the message
+will be silently dropped, and, if debug mode is enabled, an error will be
+logged to the Browser Console.
 
-If you want to pass additional fields, or use a Google Analytics hit type
-other than 'event', you can transform the output yourself using the
-transform parameter. You will need to add Custom Dimensions to GA for any
-extra fields: <https://support.google.com/analytics/answer/2709828>
+If you want to pass extra fields to GA, or use a GA hit type other than
+`Event`, you can transform the output data object yourself using the
+`transform` parameter. You will need to add Custom Dimensions to GA for any
+extra fields: <https://support.google.com/analytics/answer/2709828>. Note
+that, by convention, the `variant` argument is mapped to the first Custom
+Dimension (`cd1`) when constructing the GA Event hit.
+
+Note: the data object format is currently different for each experiment,
+and should be defined based on the result of conversations with the Mozilla
+data team.
+
+A suggested default format is:
 
 **Parameters**
 
--   `$0.event` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** What is happening? e.g. `click`
--   `$0.object` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** What is being affected? e.g. `home-button-1`
+-   `$0.method` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** What is happening? e.g. `click`
+-   `$0.object` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** What is being affected? e.g. `home-button-1`
 -   `$0.category` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** If you want to add a category
     for easy reporting later. e.g. `mainmenu` (optional, default `interactions`)
 -   `$0.variant` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** An identifying string if you're running
     different variants. e.g. `cohort-A`
--   `$0.transform` **[function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)?** Transform function used to alter the
+-   `transform` **[function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function)?** Transform function used to alter the
     parameters sent to GA. The `transform` function signature is
     `transform(input, output)`, where `input` is the object passed to
     `sendEvent` (excluding `transform`), and `output` is the default GA

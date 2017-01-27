@@ -65,22 +65,29 @@ Metrics.prototype = {
   /**
    * Sends an event to the Mozilla data pipeline (and Google Analytics, if
    * a `tid` was passed to the constructor). Note: to avoid breaking callers,
-   * if the required arguments are missing, an Error will not be thrown.
-   * Instead, the message will be silently dropped. Enable debug mode to
-   * see error messages.
+   * if sending the event fails, no Errors will be thrown. Instead, the message
+   * will be silently dropped, and, if debug mode is enabled, an error will be
+   * logged to the Browser Console.
    *
-   * If you want to pass additional fields, or use a Google Analytics hit type
-   * other than 'event', you can transform the output yourself using the
-   * transform parameter. You will need to add Custom Dimensions to GA for any
-   * extra fields: https://support.google.com/analytics/answer/2709828
+   * If you want to pass extra fields to GA, or use a GA hit type other than
+   * `Event`, you can transform the output data object yourself using the
+   * `transform` parameter. You will need to add Custom Dimensions to GA for any
+   * extra fields: https://support.google.com/analytics/answer/2709828. Note
+   * that, by convention, the `variant` argument is mapped to the first Custom
+   * Dimension (`cd1`) when constructing the GA Event hit.
    *
-   * @param {string} $0.event - What is happening? e.g. `click`
-   * @param {string} $0.object - What is being affected? e.g. `home-button-1`
+   * Note: the data object format is currently different for each experiment,
+   * and should be defined based on the result of conversations with the Mozilla
+   * data team.
+   *
+   * A suggested default format is:
+   * @param {string} [$0.method] - What is happening? e.g. `click`
+   * @param {string} [$0.object] - What is being affected? e.g. `home-button-1`
    * @param {string} [$0.category=interactions] - If you want to add a category
    * for easy reporting later. e.g. `mainmenu`
    * @param {string} [$0.variant] - An identifying string if you're running
    * different variants. e.g. `cohort-A`
-   * @param {function} [$0.transform] - Transform function used to alter the
+   * @param {function} [transform] - Transform function used to alter the
    * parameters sent to GA. The `transform` function signature is
    * `transform(input, output)`, where `input` is the object passed to
    * `sendEvent` (excluding `transform`), and `output` is the default GA
@@ -88,38 +95,44 @@ Metrics.prototype = {
    * should return an object whose keys are GA Measurement Protocol parameters.
    * The returned object will be form encoded and sent to GA.
    */
-  sendEvent: function({event, object, category='interactions', variant=null, transform=null} = {}) {
-    this._log(`sendEvent called with event = ${event}, object = ${object}, category = ${category}, variant = ${variant}.`);
-    if (!event) {
-      this._error(`'event' property is required.`);
-      return;
-    } else if (!object) {
-      this._error(`'object' property is required.`);
-      return;
-    }
+  sendEvent: function({method, object=null, category='interactions', variant=null} = {}, transform) {
+    this._log(`sendEvent called with method = ${method}, object = ${object}, category = ${category}, variant = ${variant}.`);
 
-    // Clone the data object passed in as the first argument. Using JSON
-    // to clone has the nice side effect of stripping out the transform
-    // function.
-    let cloned;
-    try {
-      cloned = JSON.parse(JSON.stringify(arguments[0]));
-    } catch (ex) {
-      this._error(`Unable to clone data object: ${ex}. Dropping packet.`);
+    const clientData = this._clone(arguments[0]);
+    const gaData = this._clone(arguments[0]);
+    if (!clientData) {
+      this._error(`Unable to process data object. Dropping packet.`);
       return;
     }
-    this._sendToClient(cloned);
+    this._sendToClient(clientData);
 
     if (this.tid) {
-      const defaultEvent = this._gaTransform(event, object, category, variant);
+      const defaultEvent = this._gaTransform(gaData);
 
       let userEvent;
       if (transform) {
-        userEvent = transform.call(null, arguments[0], defaultEvent);
+        userEvent = transform.call(null, gaData, defaultEvent);
       }
 
       this._gaSend(userEvent || defaultEvent);
     }
+  },
+
+  /**
+   * Clone a data object by serializing / deserializing it.
+   * @private
+   * @param {object} o - Object to be cloned.
+   * @returns A clone of the object, or `null` if cloning failed.
+   */
+  _clone: function(o) {
+    let cloned;
+    try {
+      cloned = JSON.parse(JSON.stringify(o));
+    } catch (ex) {
+      this._error(`Unable to clone object: ${ex}.`);
+      return null;
+    }
+    return cloned;
   },
 
   /**
@@ -161,16 +174,16 @@ Metrics.prototype = {
   },
 
    /**
-   * Transforms `sendEvent()` arguments into a Google Analytics `event` ping.
+   * Transforms `sendEvent()` arguments into a Google Analytics `Event` hit.
    * @private
-   * @param {string} event - see `sendEvent` docs
-   * @param {string} object - see `sendEvent` docs
+   * @param {string} method - see `sendEvent` docs
+   * @param {string} [object] - see `sendEvent` docs
    * @param {string} category - see `sendEvent` docs. Note that `category` is
    * required here, assuming the default value was filled in by `sendEvent()`.
    * @param {string} variant - see `sendEvent` docs. Note that `variant` is
    * required here, assuming the default value was filled in by `sendEvent()`.
    */
-  _gaTransform: function(event, object, category, variant) {
+  _gaTransform: function(method, object, category, variant) {
     const data = {
       v: 1,
       an: this.id,
@@ -179,9 +192,11 @@ Metrics.prototype = {
       uid: this.uid,
       t: 'event',
       ec: category,
-      ea: event,
-      el: object
+      ea: method
     };
+    if (object) {
+      data.el = object;
+    }
     if (variant) {
       data.cd1 = variant;
     }
