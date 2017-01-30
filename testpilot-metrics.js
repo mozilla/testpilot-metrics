@@ -59,7 +59,7 @@ function Metrics({id, version, uid, tid = null, type = 'webextension', debug = f
   } else {
     this._log(`Google Analytics enabled for Tracking ID ${tid}.`);
   }
-  this._log(`Constructor finished successfully.`);
+  this._log('Constructor finished successfully.');
 }
 Metrics.prototype = {
   /**
@@ -237,7 +237,7 @@ Metrics.prototype = {
     const params = [];
     if (!obj) { return ''; }
     Object.keys(obj).forEach(item => {
-      let encoded = encodeURIComponent(item) + '=' + encodeURIComponent(obj[item]);
+      const encoded = encodeURIComponent(item) + '=' + encodeURIComponent(obj[item]);
       params.push(encoded);
     });
     return params.join('&');
@@ -300,7 +300,7 @@ Metrics.prototype = {
    */
   _log: function(msg) {
     if (this.debug) {
-      console.log(msg);
+      console.log(msg); // eslint-disable-line no-console
     }
   },
 
@@ -311,7 +311,7 @@ Metrics.prototype = {
    */
   _error: function(msg) {
     if (this.debug) {
-      console.error(msg);
+      console.error(msg); // eslint-disable-line no-console
     }
   }
 };
@@ -324,4 +324,4 @@ if (typeof module !== 'undefined') {
 
 // Export the Metrics constructor in Gecko JSM style, for legacy addons
 // that use the JSM loader. See also: https://mdn.io/jsm/using
-const EXPORTED_SYMBOLS = ['Metrics'];
+const EXPORTED_SYMBOLS = ['Metrics']; // eslint-disable-line no-unused-vars

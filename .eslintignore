@@ -1,0 +1,3 @@
+examples/sdk/node_modules/*
+examples/sdk/testpilot-metrics.js
+examples/webextension/testpilot-metrics.js
