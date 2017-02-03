@@ -288,7 +288,6 @@ sendEvent({
   method: 'click',
   object: 'home-button-1',
   category: 'toolbar-menu',
-  study: 'button-color-test',
   variant: 'green-button'
 });
 ```
