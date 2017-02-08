@@ -8,7 +8,7 @@ A tiny example SDK add-on that uses testpilot-metrics to ping GA each time a too
 
 - Edit `index.js`, set the value of `TRACKING_ID` to your GA tracking ID.
 - Install jpm globally, if you haven't already (`npm install jpm -g`).
-- Build a copy of the add-on (`npm run build`). The add-on will be named `test-pilot-metrics-sdk-example.xpi`.
+- Build a copy of the add-on (`npm start`). The add-on will be named `test-pilot-metrics-sdk-example.xpi`.
 
 ### FF install
 

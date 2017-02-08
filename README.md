@@ -1,7 +1,8 @@
 # `testpilot-metrics`
 
-The `testpilot-metrics` library sends pings to Google Analytics and Mozilla's
-internal metrics pipeline. It is designed for use by Test Pilot experiments.
+The `testpilot-metrics` library sends pings to Mozilla's internal metrics pipeline
+and, optionally, to Google Analytics. It is designed for use by Test Pilot experiments,
+and should be used in privileged Firefox extension code--not in regular web pages.
 
 
 ## Installation
@@ -46,14 +47,39 @@ const Metrics = require('testpilot-metrics');
 const { sendEvent } = new Metrics({
   id: '@my-addon',
   version: '1.0.2a',
+
+  // These keys are also required if you're using GA:
   uid: 'some-non-PII-user-ID',
   tid: 'UA-XXXXXXXX-YY'
 });
 
+// Sometime later, when a button gets clicked:
 sendEvent({
-  object: 'webext-button',
+  object: 'toolbar-button',
   method: 'click'
 });
+```
+
+### Generating a `uid` to send to GA
+
+There are many ways to generate a unique, non-PII user ID. Here are some examples:
+
+WebExtension:
+
+```js
+// returns a cryptographically strong random integer
+// example: 3696675532
+const uid = window.crypto.getRandomValues(new Uint32Array(1))[0];
+```
+
+SDK:
+
+```js
+const { uuid } = require('sdk/util/uuid');
+
+// returns a random uuid v4 string
+// example: "b0aef941-35c0-6748-912f-d779c6e4d05e"
+const uid = uuid().number.replace('{','').replace('}','');
 ```
 
 ### Sending extra fields in addition to method / object / category
@@ -79,6 +105,7 @@ top-level keys in the `sendEvent` parameter object, for example:
 sendEvent({
   object: 'special-button',
   method: 'click',
+  category: 'popup',
   clientX: 185,
   clientY: 560
 });
@@ -95,10 +122,10 @@ fields](https://developers.google.com/analytics/devguides/collection/protocol/v1
 Once you've figured out this mapping, pass a second argument to `sendEvent`:
 a `transform` function that will convert the extra fields to GA custom fields.
 
-The `transform` function is passed 2 arguments: first, the raw event object
+The `transform` function is called with 2 arguments: first, the raw event object
 that was passed to `sendEvent`; second, the default GA ping that would normally
 be submitted (ignoring any extra parameters). The `transform` function should
-return a JS object whose keys are the GA parameters. The `testpilot-metrics`
+return a JS object whose keys are the custom set of GA parameters. The `testpilot-metrics`
 library will then encode and send the `transform` function's output.
 
 Note that the first custom dimension, `cd1`, is reserved for variant testing.
@@ -111,6 +138,7 @@ alone. You'd do this:
 sendEvent({
   object: 'special-button',
   method: 'click',
+  category: 'popup',
   clientX: 185,
   clientY: 560
 },
@@ -186,8 +214,8 @@ also look at the [example WebExtension](./examples/webextension) in this repo fo
 ```
 
 4) In your startup code, call the Metrics constructor, passing in your add-on's
-ID (`id`) and version (`version`), a non-PII user ID (`uid`), and, if you are
-using Google Analytics, a Google Analytics tracking ID (`tid`):
+ID (`id`) and version (`version`), and, if you are using Google Analytics, a
+non-PII user ID (`uid`) and your Google Analytics tracking ID (`tid`).
 
 ```js
 // background.js startup
@@ -231,13 +259,15 @@ const Metrics = require('testpilot-metrics');
 ```
 
 3) In your startup code, call the Metrics constructor, passing in your add-on's
-ID (`id`) and version (`version`), a non-PII user ID (`uid`), and, if you are
-using Google Analytics, a Google Analytics tracking ID (`tid`):
+ID (`id`) and version (`version`), the `type` argument with value `sdk`, and,
+if you are using Google Analytics, a
+non-PII user ID (`uid`), and your Google Analytics tracking ID (`tid`):
 
 ```js
 const { sendEvent } = new Metrics({
   id: 'sdk-example@testpilot.metrics',
   version: '1.0.2',
+  type: 'sdk',
   tid: 'UA-XXXXXXXX-YY',
   uid: '123-456-7890' // this can be any non-PII identifier that is stable over time
 });
@@ -311,15 +341,32 @@ msg = {
 
 These parameters are URL encoded before sending.
 
+
 ## Interested in contributing?
 
-Grab a bug and/or say hello in the testpilot channel on Mozilla IRC :-)
+Great! Grab a bug and/or say hello in the testpilot channel on Mozilla IRC :-)
 
-You can run tests via `npm run test`.
+### Code of Conduct
+
+Note that all contributors are expected to [be cool](./CODE_OF_CONDUCT.txt).
+
+### Pull Request checklist
+
+Make sure you do this stuff before opening your PR / look at this stuff when reviewing a PR:
+
+1. update code docs, if needed
+
+1. rebuild API docs: `npm run build-docs` and add changes to the PR
+
+1. make sure tests are green: `npm run test` and add new tests if you add code
+
+1. update the README and examples to document any user-visible changes you've made
+
 
 ## License
 
 MPL 2.0
+
 
 ## Author
 

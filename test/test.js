@@ -61,14 +61,23 @@ describe('Metrics constructor', () => {
       expect(nullId).to.throw(Error);
     });
   });
-  describe('required "uid" (non-PII user ID) argument', () => {
-    it('should throw if the uid is missing', () => {
-      const missingCid = () => { new Metrics({ id: '@my-addon' }) };
-      expect(missingCid).to.throw(Error);
+  describe('GA-required "uid" (non-PII user ID) argument', () => {
+    it('should not throw if "tid" and "uid" are missing', () => {
+      beforeWebExt(global);
+
+      const noGA = () => { const m = new Metrics({ id: '@my-addon', version: '0.0.1' }) };
+      expect(noGA).to.not.throw(Error);
+
+      afterWebExt(global);
     });
-    it('should throw if uid is null', () => {
-      const nullCid = () => { new Metrics({ id: '@my-addon', uid: null }) };
-      expect(nullCid).to.throw(Error);
+    it('should throw if "tid" is present and "uid" is missing', () => {
+      beforeWebExt(global);
+
+      const missingUid = () => { const m = new Metrics({ id: '@my-addon', version: '0.0.1', tid: 'UA-12345678-90'}) };
+      const m = new Metrics({id: '@my-addon', version: '1.0.2', uid: '12345', tid: 'UA-49796218-47'});
+      expect(missingUid).to.throw(Error);
+
+      afterWebExt(global);
     });
   });
   describe('optional "type" (addon type) argument', () => {
