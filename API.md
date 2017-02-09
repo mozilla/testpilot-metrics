@@ -17,8 +17,9 @@ needed when the experiment is added to or removed from Test Pilot.
 -   `$0` **[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
     -   `$0.id` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** addon ID, e.g. '@testpilot-addon'. See <https://mdn.io/add_on_id>.
     -   `$0.version` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** addon version, e.g. '1.0.2'.
-    -   `$0.uid` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)** unique identifier for a specific instance of an addon.
-        Used as Google Analytics user ID.
+    -   `$0.uid` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** unique identifier for a specific instance of an addon.
+        Optional, but required to send events to Google Analytics. Sent to Google Analytics
+        but not Mozilla services.
     -   `$0.tid` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** Google Analytics tracking ID. Optional, but required
         to send events to Google Analytics.
     -   `$0.type` **[string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)?** addon type. one of: 'webextension',

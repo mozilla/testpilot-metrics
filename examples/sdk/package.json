@@ -13,7 +13,7 @@
     "jetpack"
   ],
   "scripts": {
-    "build": "cp ../../testpilot-metrics.js . && jpm xpi"
+    "start": "cp ../../testpilot-metrics.js . && jpm xpi"
   },
   "devDependencies": {
     "jpm": "^1.2.2"

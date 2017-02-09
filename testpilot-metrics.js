@@ -10,8 +10,9 @@
  * @constructor
  * @param {string} $0.id - addon ID, e.g. '@testpilot-addon'. See https://mdn.io/add_on_id.
  * @param {string} $0.version - addon version, e.g. '1.0.2'.
- * @param {string} $0.uid - unique identifier for a specific instance of an addon.
- * Used as Google Analytics user ID.
+ * @param {string} [$0.uid] - unique identifier for a specific instance of an addon.
+ * Optional, but required to send events to Google Analytics. Sent to Google Analytics
+ * but not Mozilla services.
  * @param {string} [$0.tid] - Google Analytics tracking ID. Optional, but required
  * to send events to Google Analytics.
  * @param {string} [$0.type=webextension] - addon type. one of: 'webextension',
@@ -27,8 +28,8 @@ function Metrics({id, version, uid, tid = null, type = 'webextension', debug = f
     throw new SyntaxError(`'id' property is required.`);
   } else if (!version) {
     throw new SyntaxError(`'version' property is required.`);
-  } else if (!uid) {
-    throw new SyntaxError(`'uid' property is required.`);
+  } else if (tid && !uid) {
+    throw new SyntaxError(`'uid' property is required to send events to Google Analytics.`);
   }
 
   if (!['webextension', 'sdk', 'bootstrapped'].includes(type)) {
@@ -85,7 +86,7 @@ Metrics.prototype = {
    * @param {string} [$0.object] - What is being affected? e.g. `home-button-1`
    * @param {string} [$0.category=interactions] - If you want to add a category
    * for easy reporting later. e.g. `mainmenu`
-   * @param {string} [$0.variant] - An identifying string if you're running
+   * @param {string} [$0.variant=null] - An identifying string if you're running
    * different variants. e.g. `cohort-A`
    * @param {function} [transform] - Transform function used to alter the
    * parameters sent to GA. The `transform` function signature is
@@ -95,18 +96,23 @@ Metrics.prototype = {
    * should return an object whose keys are GA Measurement Protocol parameters.
    * The returned object will be form encoded and sent to GA.
    */
-  sendEvent: function({method, object=null, category='interactions', variant=null} = {}, transform) {
-    this._log(`sendEvent called with method = ${method}, object = ${object}, category = ${category}, variant = ${variant}.`);
+  sendEvent: function(params = {}, transform) {
+    const args = this._clone(params);
+    args.object = params.object || null;
+    args.category = params.category || 'interactions';
+    args.variant = params.variant || null;
 
-    const clientData = this._clone(arguments[0]);
-    const gaData = this._clone(arguments[0]);
+    this._log(`sendEvent called with method = ${args.method}, object = ${args.object}, category = ${args.category}, variant = ${args.variant}.`);
+
+    const clientData = this._clone(args);
+    const gaData = this._clone(args);
     if (!clientData) {
       this._error(`Unable to process data object. Dropping packet.`);
       return;
     }
     this._sendToClient(clientData);
 
-    if (this.tid) {
+    if (this.tid && this.uid) {
       const defaultEvent = this._gaTransform(gaData);
 
       let userEvent;

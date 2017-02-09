@@ -1,12 +1,19 @@
 const ui = require('sdk/ui');
+const self = require('sdk/self');
+const { uuid } = require('sdk/util/uuid');
 const Metrics = require('./testpilot-metrics');
 
 const TRACKING_ID = 'UA-XXXXXXXX-YY';
 
+// Note: normally the `UID` value would be generated and saved when the addon is
+// first installed.
+const UID = uuid().number.replace('{','').replace('}','');
+
 const { sendEvent } = new Metrics({
-  id: 'sdk-example@testpilot-metrics',
+  id: self.id,
+  version: self.version,
   tid: TRACKING_ID,
-  uid: '12345',
+  uid: UID,
   type: 'sdk'
 });
 
