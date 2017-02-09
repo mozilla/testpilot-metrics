@@ -192,6 +192,7 @@ Metrics.prototype = {
   _gaTransform: function({method, object, category, variant}) {
     const data = {
       v: 1,
+      aip: 1, // anonymize user IP addresses (#24)
       an: this.id,
       av: this.version,
       tid: this.tid,
