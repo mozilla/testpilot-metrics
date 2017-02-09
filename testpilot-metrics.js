@@ -192,6 +192,7 @@ Metrics.prototype = {
   _gaTransform: function({method, object, category, variant}) {
     const data = {
       v: 1,
+      aip: 1, // anonymize user IP addresses (#24)
       an: this.id,
       av: this.version,
       tid: this.tid,
@@ -219,14 +220,53 @@ Metrics.prototype = {
     const encoded = this._formEncode(msg);
     const GA_URL = 'https://ssl.google-analytics.com/collect';
     if (this.type === 'webextension') {
-      navigator.sendBeacon(GA_URL, encoded);
+      if ('sendBeacon' in navigator) {
+        this._sendBeacon(GA_URL, encoded);
+      } else {
+        this._fetch(GA_URL, encoded);
+      }
+    } else {
+      if ('sendBeacon' in Services.appShell.hiddenDOMWindow.navigator) {
+        this._sendBeacon(GA_URL, encoded);
+      } else {
+        this._fetch(GA_URL, encoded);
+      }
+    }
+  },
+
+  _sendBeacon: function(url, formEncodedData) {
+    if (this.type === 'webextension') {
+      navigator.sendBeacon(url, formEncodedData);
+      this._log(`Sent GA message: ${formEncodedData}`);
     } else {
       // SDK and bootstrapped types might not have a window reference, so get
       // the sendBeacon DOM API from the hidden window.
-      Services.appShell.hiddenDOMWindow.navigator.sendBeacon(GA_URL, encoded);
+      Services.appShell.hiddenDOMWindow.navigator.sendBeacon(url, formEncodedData);
+      this._log(`Sent GA message: ${formEncodedData}`);
     }
-    this._log(`Sent GA message: ${encoded}`);
   },
+
+  _fetch: function(url, formEncodedData) {
+    const config = {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+      },
+      body: formEncodedData
+    };
+    if (this.type === 'webextension') {
+      fetch(url, config)
+        .then((resp) => this._log(`Sent GA message via fetch: ${formEncodedData}`))
+        .catch((err) => this._log(`GA sending via fetch failed: ${err}`));
+    } else {
+      // SDK and bootstrapped types might not have a window reference, so get
+      // the sendBeacon DOM API from the hidden window.
+      Services.appShell.hiddenDOMWindow.fetch(url, config)
+        .then((resp) => this._log(`Sent GA message via fetch: ${formEncodedData}`))
+        .catch((err) => this._log(`GA sending via fetch failed: ${err}`));
+    }
+  }
 
   /**
    * URL encodes an object. Encodes spaces as '%20', not '+', following the
@@ -256,7 +296,9 @@ Metrics.prototype = {
    * to DOM APIs, so there's no setup work required. For other types, loads
    * `Services.jsm`, which exposes the nsIObserverService (transport for client
    * pings), and exposes the navigator.sendBeacon API (GA transport) via the
-   * appShell service's hidden window.
+   * appShell service's hidden window. Note that the sendBeacon may be preffed
+   * off (the `beacon.enabled` pref), in which case the Fetch API is used
+   * instead.
    * @private
    * @throws {Error} if transport setup unexpectedly fails
    */
