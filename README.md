@@ -330,7 +330,8 @@ msg = {
     an: '@my-addon',
     av: '1.2.3',
    tid: 'UA-XXXXXXXX-YY',
-   uid: '110ec58a-a0f2-4ac4-8393-c866d813b8d1'
+   // NOTE: the 'uid' parameter is mapped to the GA 'cid' parameter, see issue #28
+   cid: '110ec58a-a0f2-4ac4-8393-c866d813b8d1'
      t: 'event',
     ec: 'toolbar-menu',
     ea: 'click',

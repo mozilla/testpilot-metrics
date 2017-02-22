@@ -196,7 +196,7 @@ Metrics.prototype = {
       an: this.id,
       av: this.version,
       tid: this.tid,
-      uid: this.uid,
+      cid: this.uid,
       t: 'event',
       ec: category,
       ea: method
@@ -266,7 +266,7 @@ Metrics.prototype = {
         .then((resp) => this._log(`Sent GA message via fetch: ${formEncodedData}`))
         .catch((err) => this._log(`GA sending via fetch failed: ${err}`));
     }
-  }
+  },
 
   /**
    * URL encodes an object. Encodes spaces as '%20', not '+', following the
