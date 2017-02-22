@@ -266,7 +266,7 @@ Metrics.prototype = {
         .then((resp) => this._log(`Sent GA message via fetch: ${formEncodedData}`))
         .catch((err) => this._log(`GA sending via fetch failed: ${err}`));
     }
-  }
+  },
 
   /**
    * URL encodes an object. Encodes spaces as '%20', not '+', following the
