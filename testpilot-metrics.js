@@ -225,6 +225,8 @@ Metrics.prototype = {
       } else {
         this._fetch(GA_URL, encoded);
       }
+    } else if (this.type === 'sdk'){
+      this._request(GA_URL, encoded);
     } else {
       if ('sendBeacon' in Services.appShell.hiddenDOMWindow.navigator) {
         this._sendBeacon(GA_URL, encoded);
@@ -266,6 +268,15 @@ Metrics.prototype = {
         .then((resp) => this._log(`Sent GA message via fetch: ${formEncodedData}`))
         .catch((err) => this._log(`GA sending via fetch failed: ${err}`));
     }
+  },
+
+  _request: function (url, formEncodedData) {
+    const req = new this.Request({
+      url,
+      contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+      content: formEncodedData
+    });
+    req.post();
   },
 
   /**
@@ -315,6 +326,12 @@ Metrics.prototype = {
         Cu.import('resource://gre/modules/Services.jsm');
       } catch(ex) {
         throw new Error(`Unable to load Services.jsm: ${ex}`);
+      }
+      try {
+        const request = require('sdk/request');
+        this.Request = request.Request;
+      } catch (ex) {
+        throw new Error(`Unable to load sdk/request: ${ex}`);
       }
     } else { /* this.type === 'bootstrapped' */
       try {
