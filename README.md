@@ -1,3 +1,12 @@
+## Deprecated for new experiments
+
+New Test Pilot experiments are encouraged to use GA for their metrics needs.
+
+If you need redash query access, check out the ping-centre library (and let the Test Pilot team know).
+
+------
+
+
 # `testpilot-metrics`
 
 The `testpilot-metrics` library sends pings to Mozilla's internal metrics pipeline
