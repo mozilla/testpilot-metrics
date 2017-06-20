@@ -220,31 +220,11 @@ Metrics.prototype = {
     const encoded = this._formEncode(msg);
     const GA_URL = 'https://ssl.google-analytics.com/collect';
     if (this.type === 'webextension') {
-      if ('sendBeacon' in navigator) {
-        this._sendBeacon(GA_URL, encoded);
-      } else {
-        this._fetch(GA_URL, encoded);
-      }
+      this._fetch(GA_URL, encoded);
     } else if (this.type === 'sdk'){
       this._request(GA_URL, encoded);
     } else {
-      if ('sendBeacon' in Services.appShell.hiddenDOMWindow.navigator) {
-        this._sendBeacon(GA_URL, encoded);
-      } else {
-        this._fetch(GA_URL, encoded);
-      }
-    }
-  },
-
-  _sendBeacon: function(url, formEncodedData) {
-    if (this.type === 'webextension') {
-      navigator.sendBeacon(url, formEncodedData);
-      this._log(`Sent GA message: ${formEncodedData}`);
-    } else {
-      // SDK and bootstrapped types might not have a window reference, so get
-      // the sendBeacon DOM API from the hidden window.
-      Services.appShell.hiddenDOMWindow.navigator.sendBeacon(url, formEncodedData);
-      this._log(`Sent GA message: ${formEncodedData}`);
+      this._xhr(GA_URL, encoded);
     }
   },
 
@@ -257,17 +237,9 @@ Metrics.prototype = {
       },
       body: formEncodedData
     };
-    if (this.type === 'webextension') {
-      fetch(url, config)
-        .then((resp) => this._log(`Sent GA message via fetch: ${formEncodedData}`))
-        .catch((err) => this._log(`GA sending via fetch failed: ${err}`));
-    } else {
-      // SDK and bootstrapped types might not have a window reference, so get
-      // the sendBeacon DOM API from the hidden window.
-      Services.appShell.hiddenDOMWindow.fetch(url, config)
-        .then((resp) => this._log(`Sent GA message via fetch: ${formEncodedData}`))
-        .catch((err) => this._log(`GA sending via fetch failed: ${err}`));
-    }
+    fetch(url, config)
+      .then((resp) => this._log(`Sent GA message via fetch: ${formEncodedData}`))
+      .catch((err) => this._log(`GA sending via fetch failed: ${err}`));
   },
 
   _request: function (url, formEncodedData) {
@@ -277,6 +249,27 @@ Metrics.prototype = {
       content: formEncodedData
     });
     req.post();
+  },
+
+  _xhr: function(url, formEncodedData) {
+    // TODO: double-check the xhr incantation, been a while
+    let xhr = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+              .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    // Suppress dialogs and fail silently.
+    xhr.mozBackgroundRequest = true;
+    xhr.open('POST', url, true);
+    const onError = (err) => { this._log(`GA sending via xhr failed: ${err}`); };
+    xhr.onerror = onError;
+    xhr.ontimeout = onError;
+    xhr.onabort = onError;
+    xhr.onload = (evt) => {
+      if (xhr.status !== 200) {
+        this._log(`GA sending via xhr returned status ${xhr.status}`);
+      } else {
+        this._log(`Sent GA message via xhr: ${formEncodedData}`);
+      }
+    };
+    xhr.send(formEncodedData);
   },
 
   /**
@@ -303,13 +296,11 @@ Metrics.prototype = {
   /**
    * Initializes transports used for sending messages. For WebExtensions,
    * creates a `BroadcastChannel` (transport for client pings). WebExtensions
-   * use navigator.sendBeacon for GA transport, and they always have access
+   * use the Fetch API for GA transport, and they always have access
    * to DOM APIs, so there's no setup work required. For other types, loads
    * `Services.jsm`, which exposes the nsIObserverService (transport for client
-   * pings), and exposes the navigator.sendBeacon API (GA transport) via the
-   * appShell service's hidden window. Note that the sendBeacon may be preffed
-   * off (the `beacon.enabled` pref), in which case the Fetch API is used
-   * instead.
+   * pings). SDK addons use the sdk/request library, while bootstrapped addons
+   * use the internal XHR service.
    * @private
    * @throws {Error} if transport setup unexpectedly fails
    */
