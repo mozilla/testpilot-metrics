@@ -2,7 +2,7 @@
 
 New Test Pilot experiments are encouraged to use GA for their metrics needs.
 
-If you need redash query access, check out the ping-centre library (and let the Test Pilot team know).
+If you need redash query access, check out the [ping-centre library](https://github.com/mozilla/ping-centre) (and let the Test Pilot team know).
 
 ------
 
